@@ -41,8 +41,8 @@ except Exception as e:
 
 # ✅ Function to Extract Text from PDF Using OCR
 def extract_text_from_pdf(uploaded_file):
-  #  if pytesseract.pytesseract.tesseract_cmd is None:
-       # return "⚠️ Tesseract OCR is not installed. Cannot process PDF."
+    if pytesseract.pytesseract.tesseract_cmd is None:
+      return "⚠️ Tesseract OCR is not installed. Cannot process PDF."
    images = convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
    extracted_text_per_page = []
     
@@ -52,12 +52,7 @@ def extract_text_from_pdf(uploaded_file):
         st.write(f"✅ OCR completed for Page {i+1}")
    extracted_text = "\n".join(extracted_text_per_page)
    return  extracted_text
-    
-    #images = convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)  # ✅ Explicitly pass Poppler path
-    #text = ""
-    #for i, image in enumerate(images):
-     #   text += image_to_string(image, config="--psm 6") + "\n"
-    #return text.replace("Mostra tutto", "")
+
 
 # ✅ Function to Parse Extracted Text into Structured Data
 def parse_candidates(extracted_text):  # ✅ FIXED: Correct indentation
