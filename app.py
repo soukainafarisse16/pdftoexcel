@@ -68,7 +68,7 @@ def parse_candidates(extracted_text_per_page):  # ✅ FIXED: Correct indentation
         r"(?P<location>.*?)(?:\s-\s(?P<industry>.*?))\n\n"
         r"(?P<company_line>.*?)\n?\n"  # Capture the whole line containing company info
     )
-    for match in pattern.finditer(ocr_text):
+    for match in pattern.finditer(extracted_text_per_page):
         candidate = match.groupdict()
         company_line = candidate.get('company_line', '')  # Get the company line
 
