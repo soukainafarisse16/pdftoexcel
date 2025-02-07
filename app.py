@@ -49,7 +49,7 @@ def extract_text_from_pdf(uploaded_file):
 
     # ✅ Debugging: Show Extracted Text Preview
     st.write("📜 **Extracted Text Preview:**")
-    st.text(extracted_text[:2000])  # Shows first 2000 characters
+    st.text(extracted_text[:20000])  # Shows first 2000 characters
 
     return extracted_text  # ✅ FIXED: Now correctly returns extracted text
 
