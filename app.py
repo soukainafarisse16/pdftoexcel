@@ -47,9 +47,9 @@ def extract_text_from_pdf(uploaded_file):
 
     extracted_text = "\n".join(extracted_text_per_page)
 
-    # ✅ Debugging: Show Full Extracted Text in Streamlit
+    # ✅ Debugging: Show Extracted Text in Streamlit
     st.write("📜 **Extracted Text Preview (First 5000 characters):**")
-    st.text(extracted_text[:5000])  # ✅ Show first 5000 characters to detect format issues
+    st.text(extracted_text[:5000])  # ✅ Show first 5000 characters to check format
 
     return extracted_text  # ✅ FIXED: Now correctly returns extracted text
 
@@ -57,20 +57,17 @@ def extract_text_from_pdf(uploaded_file):
 def parse_candidates(extracted_text):
     candidates = []
 
-    # ✅ More Flexible Regex to Extract Candidates
+    # ✅ New Regex Pattern to Extract Candidates Accurately
     pattern = re.compile(
-        r"(?P<name>[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+)"  # Name (e.g., "John Doe")
-        r"\n(?P<title>.+?)\n"  # Title (Job role)
-        r"(?P<company>.+?)\n"  # Company Name
-        r"(?P<location>[A-Za-zÀ-ÖØ-öø-ÿ\s]+)"  # Location
-        r"(?:\s*-\s*(?P<industry>[A-Za-zÀ-ÖØ-öø-ÿ\s]+))?"  # Industry (optional)
+        r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"  # Name
+        r"(?P<title>[^\n]+)\n"  # Job Title (One Line)
+        r"(?P<company>.*?)(?:\sat\s|\spresso\s|\sfor\s)(?P<location>[^\n]+)",  # Company & Location
+        re.MULTILINE
     )
 
-    # ✅ Count & Display Matches
     matches = list(pattern.finditer(extracted_text))
     st.write(f"🔍 **Total Candidates Detected: {len(matches)}**")
 
-    # ✅ If No Candidates Found, Show a Warning
     if len(matches) == 0:
         st.error("⚠️ No candidates found! Check the extracted text format.")
 
@@ -98,7 +95,7 @@ if uploaded_file:
                 df = pd.DataFrame(parsed_data)
 
                 # ✅ Ensure All Required Columns Exist
-                required_columns = ["name", "title", "company", "location", "industry"]
+                required_columns = ["name", "title", "company", "location"]
                 for col in required_columns:
                     if col not in df:
                         df[col] = "Not Available"
