@@ -43,7 +43,7 @@ except Exception as e:
 def extract_text_from_pdf(uploaded_file):
     if pytesseract.pytesseract.tesseract_cmd is None:
         return "⚠️ Tesseract OCR is not installed. Cannot process PDF."
-    
+    else
     images = convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)  # ✅ Explicitly pass Poppler path
     text = ""
     for i, image in enumerate(images):
