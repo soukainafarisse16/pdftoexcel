@@ -29,7 +29,7 @@ else:  # ✅ For Linux (Streamlit Cloud, Render, etc.)
 try:
     tesseract_version = subprocess.check_output([tesseract_path, "--version"]).decode().strip()
     pytesseract.pytesseract.tesseract_cmd = tesseract_path
-    st.write(f"✅ Tesseract found: {tesseract_version}")
+   
 except FileNotFoundError:
     st.write("⚠️ Warning: Tesseract is not installed. OCR will not work.")
     pytesseract.pytesseract.tesseract_cmd = None  # Prevent NameError if missing
@@ -40,7 +40,7 @@ except Exception as e:
 # ✅ Check if Poppler is Installed
 try:
     pdfinfo_path = subprocess.check_output(["where" if platform.system() == "Windows" else "which", "pdfinfo"]).decode().strip()
-    st.write(f"✅ pdfinfo (Poppler) found at: {pdfinfo_path}")
+    
 except Exception as e:
     st.write(f"⚠️ Poppler not found! Ensure it is installed. Error: {e}")
 
@@ -56,17 +56,26 @@ def extract_text_from_pdf(uploaded_file):
     return text.replace("Mostra tutto", "")
 
 # ✅ Function to Parse Extracted Text into Structured Data
-def parse_candidates(ocr_text):
+    def parse_candidates(ocr_text):
     candidates = []
     pattern = re.compile(
-        r"(?P<name>[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+)\n"
-        r"(?P<title>.+?)\n"
-        r"(?P<company>.+?)\n"
-        r"(?P<location>[A-Za-zÀ-ÖØ-öø-ÿ\s]+)"
-        r"(?:\s*-\s*(?P<industry>[A-Za-zÀ-ÖØ-öø-ÿ\s]+))?"
+        r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"
+        r"(?P<title>.*?)\n\n"
+        r"(?P<location>.*?)(?:\s-\s(?P<industry>.*?))\n\n"
+        r"(?P<company_line>.*?)\n?\n"  # Capture the whole line containing company info
     )
     for match in pattern.finditer(ocr_text):
-        candidates.append(match.groupdict())
+        candidate = match.groupdict()
+        company_line = candidate.get('company_line', '')  # Get the company line
+
+        company_match = re.search(r"(?:presso|for|at)\s(.*?)(?:\s\d{4}|$)", company_line)
+        if company_match:
+            candidate["company"] = company_match.group(1).strip()  # Extract and clean company
+        else:
+            candidate["company"] = ""  # Or "Not Available" if you prefer
+
+        candidates.append(candidate)
+        del candidate['company_line']  # Remove the 'company_line' key
     return candidates
 
 # ✅ Streamlit Sidebar for PDF Upload
