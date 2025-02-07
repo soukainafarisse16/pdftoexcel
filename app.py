@@ -1,4 +1,3 @@
-
 import streamlit as st
 import os
 import platform
@@ -14,11 +13,11 @@ st.set_page_config(page_title="PDF to Excel Converter", page_icon="📄", layout
 
 # ✅ Detect Operating System and Set Paths
 if platform.system() == "Windows":
-    poppler_path = r"C:\Users\sfarisse\poppler-24.08.0-0\poppler-24.08.0\Library\bin"  # Update if needed
+    poppler_path = r"C:\Users\sfarisse\poppler-24.08.0-0\poppler-24.08.0\Library\bin"
     os.environ["PATH"] += os.pathsep + poppler_path
 
-    # ✅ Auto-detect Tesseract path (Now in System PATH)
-   tesseract_path = r"C:\Program Files\Tesseract-OCR"
+    # ✅ Explicitly set the correct Tesseract path
+    tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
     pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
 else:  # For Linux (Streamlit Cloud, Render, etc.)
