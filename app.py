@@ -121,6 +121,3 @@ if uploaded_file:
                 )
             else:
                 st.error("⚠️ No candidates found. Try another file.")
-
-
-
