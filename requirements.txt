@@ -4,3 +4,5 @@ pdf2image
 pytesseract
 xlsxwriter
 Pillow
+openpyxl
+poppler-utils
