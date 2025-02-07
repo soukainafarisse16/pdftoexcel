@@ -41,15 +41,15 @@ def extract_text_from_pdf(uploaded_file):
     extracted_text_per_page = []
 
     for i, image in enumerate(images):
-        page_text = image_to_string(image, config="--psm 6")
+        page_text = image_to_string(image, config="--psm 6")  # Extract text
         extracted_text_per_page.append(f"--- Page {i+1} ---\n{page_text}\n")
         st.write(f"✅ OCR completed for Page {i+1}")
 
     extracted_text = "\n".join(extracted_text_per_page)
 
-    # ✅ Debugging: Show Extracted Text Preview
-    st.write("📜 **Extracted Text Preview:**")
-    st.text(extracted_text[:20000])  # Shows first 2000 characters
+    # ✅ Debugging: Show Full Extracted Text in Streamlit
+    st.write("📜 **Extracted Text Preview (First 5000 characters):**")
+    st.text(extracted_text[:5000])  # ✅ Show first 5000 characters to detect format issues
 
     return extracted_text  # ✅ FIXED: Now correctly returns extracted text
 
@@ -57,29 +57,26 @@ def extract_text_from_pdf(uploaded_file):
 def parse_candidates(extracted_text):
     candidates = []
 
-    # ✅ Updated Regex for Extracting Candidate Information
+    # ✅ More Flexible Regex to Extract Candidates
     pattern = re.compile(
-        r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"  # Name
-        r"(?P<title>.*?)\n\n"  # Job Title
-        r"(?P<location>.*?)(?:\s-\s(?P<industry>.*?))?\n\n"  # Location & Industry
-        r"(?P<company_line>.*?)\n?\n"  # Capture the whole line for Company
+        r"(?P<name>[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+)"  # Name (e.g., "John Doe")
+        r"\n(?P<title>.+?)\n"  # Title (Job role)
+        r"(?P<company>.+?)\n"  # Company Name
+        r"(?P<location>[A-Za-zÀ-ÖØ-öø-ÿ\s]+)"  # Location
+        r"(?:\s*-\s*(?P<industry>[A-Za-zÀ-ÖØ-öø-ÿ\s]+))?"  # Industry (optional)
     )
 
-    for match in pattern.finditer(extracted_text):  # ✅ FIXED: Now using `extracted_text`
+    # ✅ Count & Display Matches
+    matches = list(pattern.finditer(extracted_text))
+    st.write(f"🔍 **Total Candidates Detected: {len(matches)}**")
+
+    # ✅ If No Candidates Found, Show a Warning
+    if len(matches) == 0:
+        st.error("⚠️ No candidates found! Check the extracted text format.")
+
+    for match in matches:
         candidate = match.groupdict()
-        company_line = candidate.get('company_line', '')
-
-        company_match = re.search(r"(?:presso|for|at)\s(.*?)(?:\s\d{4}|$)", company_line)
-        if company_match:
-            candidate["company"] = company_match.group(1).strip()
-        else:
-            candidate["company"] = ""
-
         candidates.append(candidate)
-        del candidate['company_line']
-
-    # ✅ Debugging: Show Candidate Count
-    st.write(f"🔍 **Total Candidates Extracted: {len(candidates)}**")
 
     return candidates
 
@@ -124,5 +121,6 @@ if uploaded_file:
                 )
             else:
                 st.error("⚠️ No candidates found. Try another file.")
+
 
 
