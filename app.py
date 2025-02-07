@@ -1,5 +1,3 @@
-
-
 import os
 import platform
 import subprocess
@@ -10,7 +8,6 @@ import pytesseract
 from pdf2image import convert_from_bytes
 from pytesseract import image_to_string
 from io import BytesIO
-
 
 # ✅ Set Streamlit Page Configuration
 st.set_page_config(page_title="PDF to Excel Converter", page_icon="📄", layout="wide")
@@ -29,7 +26,6 @@ else:  # ✅ For Linux (Streamlit Cloud, Render, etc.)
 try:
     tesseract_version = subprocess.check_output([tesseract_path, "--version"]).decode().strip()
     pytesseract.pytesseract.tesseract_cmd = tesseract_path
-   
 except FileNotFoundError:
     st.write("⚠️ Warning: Tesseract is not installed. OCR will not work.")
     pytesseract.pytesseract.tesseract_cmd = None  # Prevent NameError if missing
@@ -40,7 +36,6 @@ except Exception as e:
 # ✅ Check if Poppler is Installed
 try:
     pdfinfo_path = subprocess.check_output(["where" if platform.system() == "Windows" else "which", "pdfinfo"]).decode().strip()
-    
 except Exception as e:
     st.write(f"⚠️ Poppler not found! Ensure it is installed. Error: {e}")
 
@@ -56,7 +51,7 @@ def extract_text_from_pdf(uploaded_file):
     return text.replace("Mostra tutto", "")
 
 # ✅ Function to Parse Extracted Text into Structured Data
-    def parse_candidates(ocr_text):
+def parse_candidates(ocr_text):  # ✅ FIXED: Correct indentation
     candidates = []
     pattern = re.compile(
         r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"
@@ -119,3 +114,4 @@ if uploaded_file:
                 )
             else:
                 st.error("⚠️ No candidates found. Try another file.")
+
