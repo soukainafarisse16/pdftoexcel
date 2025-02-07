@@ -46,12 +46,12 @@ def extract_text_from_pdf(uploaded_file):
    images = convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
    extracted_text_per_page = []
     
-    for i, image in enumerate(images):
+   for i, image in enumerate(images):
         page_text = image_to_string(image, config="--psm 6")
         extracted_text_per_page.append(f"--- Page {i+1} ---\n{page_text}\n")
         st.write(f"✅ OCR completed for Page {i+1}")
 
-    return "\n".join(extracted_text_per_page)
+   return "\n".join(extracted_text_per_page)
     
     #images = convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)  # ✅ Explicitly pass Poppler path
     #text = ""
