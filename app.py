@@ -1,4 +1,4 @@
-import os
+iimport os
 import platform
 import subprocess
 import streamlit as st
@@ -46,11 +46,6 @@ def extract_text_from_pdf(uploaded_file):
         st.write(f"✅ OCR completed for Page {i+1}")
 
     extracted_text = "\n".join(extracted_text_per_page)
-
-    # ✅ Debugging: Show Extracted Text in Streamlit
-    st.write("📜 **Extracted Text Preview (First 5000 characters):**")
-    st.text(extracted_text[:5000])  # ✅ Show first 5000 characters to check format
-
     return extracted_text  # ✅ FIXED: Now correctly returns extracted text
 
 # ✅ Function to Parse Extracted Text into Structured Data
@@ -61,7 +56,8 @@ def parse_candidates(extracted_text):
     pattern = re.compile(
         r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"  # Name
         r"(?P<title>[^\n]+)\n"  # Job Title (One Line)
-        r"(?P<company>.*?)(?:\sat\s|\spresso\s|\sfor\s)(?P<location>[^\n]+)",  # Company & Location
+        r"(?P<location>[A-Za-zÀ-ÖØ-öø-ÿ\s]+)\s-\s(?P<industry>[^\n]+)\n"  # Location - Industry
+        r"(?:Esperienza\s(?P<company>[^\n]+))?",  # Experience + Company (if available)
         re.MULTILINE
     )
 
@@ -95,7 +91,7 @@ if uploaded_file:
                 df = pd.DataFrame(parsed_data)
 
                 # ✅ Ensure All Required Columns Exist
-                required_columns = ["name", "title", "company", "location"]
+                required_columns = ["name", "title", "company", "location", "industry"]
                 for col in required_columns:
                     if col not in df:
                         df[col] = "Not Available"
