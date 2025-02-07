@@ -1,4 +1,4 @@
-iimport os
+import os
 import platform
 import subprocess
 import streamlit as st
