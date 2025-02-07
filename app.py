@@ -18,7 +18,7 @@ if platform.system() == "Windows":
     os.environ["PATH"] += os.pathsep + poppler_path
 
     # ✅ Auto-detect Tesseract path (Now in System PATH)
-    tesseract_path = "tesseract"  # No need for full path since it's in system PATH
+   tesseract_path = r"C:\Program Files\Tesseract-OCR"
     pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
 else:  # For Linux (Streamlit Cloud, Render, etc.)
