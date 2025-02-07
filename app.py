@@ -1,30 +1,43 @@
 
 import streamlit as st
+import os
+import platform
+import subprocess
 import pandas as pd
 import re
 from pdf2image import convert_from_bytes
 from pytesseract import image_to_string
 from io import BytesIO
-import subprocess
-import os
-import platform
 
 # ✅ Set Streamlit Page Configuration
 st.set_page_config(page_title="PDF to Excel Converter", page_icon="📄", layout="wide")
 
-# ✅ Detect Operating System and Set Poppler Path
+# ✅ Detect Operating System and Set Paths
 if platform.system() == "Windows":
     poppler_path = r"C:\Users\sfarisse\poppler-24.08.0-0\poppler-24.08.0\Library\bin"  # Update if needed
     os.environ["PATH"] += os.pathsep + poppler_path
-else:  # For Linux (Streamlit Cloud, GitHub Actions, Render, etc.)
-    poppler_path = "/usr/bin"
 
-# ✅ Check if Poppler (`pdfinfo`) is Available
+    # ✅ Auto-detect Tesseract path (Now in System PATH)
+    tesseract_path = "tesseract"  # No need for full path since it's in system PATH
+    pytesseract.pytesseract.tesseract_cmd = tesseract_path
+
+else:  # For Linux (Streamlit Cloud, Render, etc.)
+    poppler_path = "/usr/bin"
+    tesseract_path = "/usr/bin/tesseract"
+    pytesseract.pytesseract.tesseract_cmd = tesseract_path
+
+# ✅ Check if Tesseract & Poppler are Installed
+try:
+    tesseract_version = subprocess.check_output([pytesseract.pytesseract.tesseract_cmd, "--version"]).decode().strip()
+    st.write(f"✅ Tesseract found: {tesseract_version}")
+except Exception as e:
+    st.write(f"⚠️ Tesseract not found! Ensure it is installed. Error: {e}")
+
 try:
     pdfinfo_path = subprocess.check_output(["where" if platform.system() == "Windows" else "which", "pdfinfo"]).decode().strip()
-    print(f"✅ pdfinfo found at: {pdfinfo_path}")
+    st.write(f"✅ pdfinfo (Poppler) found at: {pdfinfo_path}")
 except Exception as e:
-    print(f"⚠️ pdfinfo not found! Ensure Poppler is installed. Error: {e}")
+    st.write(f"⚠️ Poppler not found! Ensure it is installed. Error: {e}")
 
 # ✅ Function to Extract Text from PDF Using OCR
 def extract_text_from_pdf(uploaded_file):
