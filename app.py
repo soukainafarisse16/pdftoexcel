@@ -44,7 +44,7 @@ def extract_text_from_pdf(uploaded_file):
   #  if pytesseract.pytesseract.tesseract_cmd is None:
        # return "⚠️ Tesseract OCR is not installed. Cannot process PDF."
    images = convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
-    extracted_text_per_page = []
+   extracted_text_per_page = []
     
     for i, image in enumerate(images):
         page_text = image_to_string(image, config="--psm 6")
