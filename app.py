@@ -60,7 +60,7 @@ def extract_text_from_pdf(uploaded_file):
     #return text.replace("Mostra tutto", "")
 
 # ✅ Function to Parse Extracted Text into Structured Data
-def parse_candidates(extracted_text_per_page):  # ✅ FIXED: Correct indentation
+def parse_candidates(extracted_text):  # ✅ FIXED: Correct indentation
     candidates = []
     pattern = re.compile(
         r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"
@@ -68,7 +68,7 @@ def parse_candidates(extracted_text_per_page):  # ✅ FIXED: Correct indentation
         r"(?P<location>.*?)(?:\s-\s(?P<industry>.*?))\n\n"
         r"(?P<company_line>.*?)\n?\n"  # Capture the whole line containing company info
     )
-    for match in pattern.finditer(extracted_text_per_page):
+    for match in pattern.finditer(extracted_text):
         candidate = match.groupdict()
         company_line = candidate.get('company_line', '')  # Get the company line
 
