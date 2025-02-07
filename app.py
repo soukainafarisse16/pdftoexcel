@@ -1,75 +1,57 @@
 import os
-import platform
-import subprocess
+import re
 import streamlit as st
 import pandas as pd
-import re
 import pytesseract
 from pdf2image import convert_from_bytes
 from pytesseract import image_to_string
 from io import BytesIO
 
-# ✅ Set Streamlit Page Configuration
+# ✅ Streamlit Page Configuration
 st.set_page_config(page_title="PDF to Excel Converter", page_icon="📄", layout="wide")
 
-# ✅ Detect OS and Set Paths
-if platform.system() == "Windows":
-    poppler_path = r"C:\Users\sfarisse\poppler-24.08.0-0\poppler-24.08.0\Library\bin"
-    os.environ["PATH"] += os.pathsep + poppler_path
-    tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-else:
-    poppler_path = "/usr/bin"
-    tesseract_path = "/usr/bin/tesseract"
-
-# ✅ Ensure Tesseract is Installed Before Using It
-try:
-    tesseract_version = subprocess.check_output([tesseract_path, "--version"]).decode().strip()
-    pytesseract.pytesseract.tesseract_cmd = tesseract_path
-except FileNotFoundError:
-    st.warning("⚠️ Tesseract is not installed. OCR will not work.")
-    pytesseract.pytesseract.tesseract_cmd = None
-except Exception as e:
-    st.warning(f"⚠️ Tesseract not found. Error: {e}")
-    pytesseract.pytesseract.tesseract_cmd = None
-
-# ✅ Extract Text from PDF Page by Page
+# ✅ Function to Extract Text from PDF Using OCR
 def extract_text_from_pdf(uploaded_file):
-    if pytesseract.pytesseract.tesseract_cmd is None:
-        return "⚠️ Tesseract OCR is not installed. Cannot process PDF."
-
-    images = convert_from_bytes(uploaded_file.read(), poppler_path=poppler_path)
-    extracted_text_per_page = []
+    images = convert_from_bytes(uploaded_file.read())
+    extracted_text = ""
 
     for i, image in enumerate(images):
-        page_text = image_to_string(image, config="--psm 6")  # Extract text
-        extracted_text_per_page.append(f"--- Page {i+1} ---\n{page_text}\n")
+        page_text = image_to_string(image, config="--psm 6")  # OCR extraction
+        extracted_text += f"\n--- Page {i+1} ---\n" + page_text + "\n"
         st.write(f"✅ OCR completed for Page {i+1}")
 
-    extracted_text = "\n".join(extracted_text_per_page)
-    return extracted_text  # ✅ FIXED: Now correctly returns extracted text
+    # ✅ Show Extracted Text Preview (First 5000 characters)
+    st.write("📜 **Extracted Text Preview:**")
+    st.text(extracted_text[:5000])
+
+    return extracted_text
 
 # ✅ Function to Parse Extracted Text into Structured Data
 def parse_candidates(extracted_text):
     candidates = []
-
-    # ✅ New Regex Pattern to Extract Candidates Accurately
     pattern = re.compile(
-        r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"  # Name
-        r"(?P<title>[^\n]+)\n"  # Job Title (One Line)
-        r"(?P<location>[A-Za-zÀ-ÖØ-öø-ÿ\s]+)\s-\s(?P<industry>[^\n]+)\n"  # Location - Industry
-        r"(?:Esperienza\s(?P<company>[^\n]+))?",  # Experience + Company (if available)
-        re.MULTILINE
+        r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"
+        r"(?P<title>.*?)\n\n"
+        r"(?P<location>.*?)(?:\s-\s(?P<industry>.*?))?\n\n"
+        r"(?P<company_line>.*?)\n?\n"  # Capture the whole line containing company info
     )
 
-    matches = list(pattern.finditer(extracted_text))
-    st.write(f"🔍 **Total Candidates Detected: {len(matches)}**")
-
-    if len(matches) == 0:
-        st.error("⚠️ No candidates found! Check the extracted text format.")
-
-    for match in matches:
+    for match in pattern.finditer(extracted_text):
         candidate = match.groupdict()
+        company_line = candidate.get('company_line', '')
+
+        # Extract Company Name
+        company_match = re.search(r"(?:presso|for|at)\s(.*?)(?:\s\d{4}|$)", company_line)
+        if company_match:
+            candidate["company"] = company_match.group(1).strip()
+        else:
+            candidate["company"] = ""
+
         candidates.append(candidate)
+        del candidate['company_line']
+
+    # ✅ Debugging: Show Number of Candidates Extracted
+    st.write(f"🔍 **Total Candidates Detected: {len(candidates)}**")
 
     return candidates
 
@@ -80,12 +62,12 @@ uploaded_file = st.sidebar.file_uploader("Choose a PDF", type=["pdf"])
 
 if uploaded_file:
     with st.spinner("⏳ Processing your file... Please wait."):
-        extracted_text = extract_text_from_pdf(uploaded_file)  # ✅ FIXED: Now correctly passed
+        extracted_text = extract_text_from_pdf(uploaded_file)
 
-        if "⚠️ Tesseract OCR is not installed" in extracted_text:
-            st.error(extracted_text)
+        if not extracted_text.strip():
+            st.error("⚠️ No text extracted. Try another PDF.")
         else:
-            parsed_data = parse_candidates(extracted_text)  # ✅ FIXED: Now using `extracted_text`
+            parsed_data = parse_candidates(extracted_text)
 
             if parsed_data:
                 df = pd.DataFrame(parsed_data)
