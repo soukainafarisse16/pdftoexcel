@@ -60,7 +60,7 @@ def extract_text_from_pdf(uploaded_file):
     #return text.replace("Mostra tutto", "")
 
 # ✅ Function to Parse Extracted Text into Structured Data
-def parse_candidates(ocr_text):  # ✅ FIXED: Correct indentation
+def parse_candidates(extracted_text_per_page):  # ✅ FIXED: Correct indentation
     candidates = []
     pattern = re.compile(
         r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"
