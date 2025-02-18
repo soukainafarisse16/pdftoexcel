@@ -19,10 +19,6 @@ else:
     poppler_path = "/usr/bin"
     pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
-# ✅ Debug: Display Paths
-st.sidebar.write(f"📌 **Poppler Path:** {poppler_path}")
-st.sidebar.write(f"📌 **Tesseract Path:** {pytesseract.pytesseract.tesseract_cmd}")
-
 # ✅ Streamlit Sidebar for PDF Upload
 st.sidebar.title("📂 Upload PDF File")
 uploaded_file = st.sidebar.file_uploader("Choose a PDF", type=["pdf"])
@@ -30,14 +26,14 @@ uploaded_file = st.sidebar.file_uploader("Choose a PDF", type=["pdf"])
 if uploaded_file:
     with st.spinner("⏳ Processing your file... Please wait."):
         try:
-            # ✅ Convert PDF to images (higher DPI for better OCR accuracy)
-            images = convert_from_bytes(uploaded_file.read(), dpi=300, poppler_path=poppler_path)
+            # ✅ Convert PDF to images (Higher DPI for better OCR accuracy)
+            images = convert_from_bytes(uploaded_file.read(), dpi=400, poppler_path=poppler_path)
             st.write(f"✅ **Number of pages converted:** {len(images)}")
 
-            # ✅ Perform OCR on each page
+            # ✅ Perform OCR on each page with improved settings
             ocr_text = ""
             for i, image in enumerate(images):
-                page_text = image_to_string(image, config="--psm 6")
+                page_text = image_to_string(image, config="--psm 3")  # More flexible text detection
                 ocr_text += f"\n--- Page {i+1} ---\n" + page_text + "\n"
                 st.write(f"✅ **OCR completed for Page {i+1}**")
 
@@ -49,10 +45,10 @@ if uploaded_file:
             def parse_candidates(ocr_text):
                 candidates = []
                 pattern = re.compile(
-                    r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s-\s\d+°\n"  # Name
-                    r"(?P<title>.*?)\n"  # Job Title
-                    r"(?P<location>[A-Za-zÀ-ÖØ-öø-ÿ\s]+)\s-\s(?P<industry>[^\n]+)\n"  # Location - Industry
-                    r"(?:Esperienza\s(?P<company>[^\n]+))?",  # Experience + Company (if available)
+                    r"(?P<name>[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+)\n"  # Full Name
+                    r"(?P<title>[^\n]+)\n"  # Job Title
+                    r"(?:Esperienza\s(?P<company>[^\n]+))?\n"  # Optional Company
+                    r"(?P<location>[A-Za-zÀ-ÖØ-öø-ÿ\s]+)(?:\s*-\s*(?P<industry>[^\n]+))?",  # Location & Industry
                     re.MULTILINE
                 )
 
@@ -101,4 +97,5 @@ if uploaded_file:
         
         except Exception as e:
             st.error(f"❌ **Error:** {e}")
+
 
