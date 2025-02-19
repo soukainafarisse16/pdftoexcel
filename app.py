@@ -26,18 +26,18 @@ uploaded_file = st.sidebar.file_uploader("Choose a PDF", type=["pdf"])
 if uploaded_file:
     with st.spinner("⏳ Processing your file... Please wait."):
         try:
-            # ✅ Convert PDF to images (Higher DPI for better OCR accuracy)
-            images = convert_from_bytes(uploaded_file.read(), dpi=400, poppler_path=poppler_path)
+            # ✅ Convert PDF to Images (Higher DPI & JPEG Format for Better OCR)
+            images = convert_from_bytes(uploaded_file.read(), dpi=500, fmt="jpeg", poppler_path=poppler_path)
             st.write(f"✅ **Number of pages converted:** {len(images)}")
 
-            # ✅ Perform OCR on each page with improved settings
+            # ✅ Perform OCR on each page with optimized settings
             ocr_text = ""
             for i, image in enumerate(images):
-                page_text = image_to_string(image, config="--psm 3")  # More flexible text detection
+                page_text = image_to_string(image, config="--psm 6 -c preserve_interword_spaces=1")
                 ocr_text += f"\n--- Page {i+1} ---\n" + page_text + "\n"
                 st.write(f"✅ **OCR completed for Page {i+1}**")
 
-            # ✅ Show Extracted Text Preview (First 5000 characters)
+            # ✅ Debug: Show Extracted Text Preview
             st.write("📜 **Extracted Text Preview (First 5000 characters):**")
             st.text(ocr_text[:5000])
 
@@ -45,10 +45,9 @@ if uploaded_file:
             def parse_candidates(ocr_text):
                 candidates = []
                 pattern = re.compile(
-                    r"(?P<name>[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+)\n"  # Full Name
-                    r"(?P<title>[^\n]+)\n"  # Job Title
-                    r"(?:Esperienza\s(?P<company>[^\n]+))?\n"  # Optional Company
-                    r"(?P<location>[A-Za-zÀ-ÖØ-öø-ÿ\s]+)(?:\s*-\s*(?P<industry>[^\n]+))?",  # Location & Industry
+                    r"(?P<name>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s*[-—]\s*(?P<title>.+?)\n"
+                    r"(?P<location>[\w\s,]+?)(?:\s*[-—]\s*(?P<industry>.+?))?\n"
+                    r"(?:Esperienza\s*(?P<company>.+?))?\n",
                     re.MULTILINE
                 )
 
@@ -97,5 +96,3 @@ if uploaded_file:
         
         except Exception as e:
             st.error(f"❌ **Error:** {e}")
-
-
